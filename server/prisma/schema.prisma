@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  games     Game[]
+
+  @@index([username])
+}
+
+model Game {
+  id         String   @id @default(uuid())
+  userId     String
+  tapCount   Int
+  duration   Int      @default(10000) // duration in milliseconds
+  percentile Float?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tapCount(sort: Desc)])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
