@@ -2,6 +2,12 @@
 
 TapVelocity is a full-stack reaction game where players tap as fast as possible for 10 seconds and compare scores on a global leaderboard.
 
+## Current Version
+
+- Mobile app (`tapvelocity/package.json` and `tapvelocity/app.json`): `1.0.0`
+- Backend API (`server/package.json`): `1.0.0`
+- Last verified: `2026-04-02`
+
 This repository contains:
 
 - A GraphQL backend (`server/`) built with Fastify, Mercurius, Prisma, and PostgreSQL

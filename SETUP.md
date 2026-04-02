@@ -2,6 +2,12 @@
 
 A high-intensity reaction game where users tap a button as many times as possible in 10 seconds, with real-time global leaderboard rankings.
 
+## Current Version
+
+- Mobile app (`tapvelocity/package.json` and `tapvelocity/app.json`): `1.0.0`
+- Backend API (`server/package.json`): `1.0.0`
+- Last verified: `2026-04-02`
+
 ---
 
 ## Prerequisites
