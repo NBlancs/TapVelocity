@@ -19,6 +19,7 @@ export function ResultsCard({
   onPlayAgain,
 }: ResultsCardProps) {
   const tint = useThemeColor({}, 'tint');
+  const mutedText = useThemeColor({}, 'mutedText');
   const cps = (taps / 10).toFixed(1);
   const topPercent = percentile != null ? (100 - percentile).toFixed(1) : null;
 
@@ -29,17 +30,17 @@ export function ResultsCard({
       </ThemedText>
 
       <View style={styles.statRow}>
-        <ThemedText style={styles.statLabel}>Total Taps</ThemedText>
+        <ThemedText style={[styles.statLabel, { color: mutedText }]}>Total Taps</ThemedText>
         <ThemedText style={[styles.statValue, { color: tint }]}>{taps}</ThemedText>
       </View>
 
       <View style={styles.statRow}>
-        <ThemedText style={styles.statLabel}>Taps/Second</ThemedText>
+        <ThemedText style={[styles.statLabel, { color: mutedText }]}>Taps/Second</ThemedText>
         <ThemedText style={[styles.statValue, { color: tint }]}>{cps}</ThemedText>
       </View>
 
       <View style={styles.statRow}>
-        <ThemedText style={styles.statLabel}>Ranking</ThemedText>
+        <ThemedText style={[styles.statLabel, { color: mutedText }]}>Ranking</ThemedText>
         {isSubmitting ? (
           <ActivityIndicator size="small" color={tint} />
         ) : topPercent != null ? (
@@ -85,7 +86,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 16,
-    opacity: 0.7,
   },
   statValue: {
     fontSize: 24,

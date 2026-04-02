@@ -8,11 +8,12 @@ interface TimerDisplayProps {
 
 export function TimerDisplay({ timeRemaining }: TimerDisplayProps) {
   const tint = useThemeColor({}, 'tint');
+  const surface = useThemeColor({}, 'surface');
   const isUrgent = timeRemaining <= 3 && timeRemaining > 0;
   const display = timeRemaining.toFixed(1);
 
   return (
-    <View style={[styles.container, { shadowColor: tint }]}>
+    <View style={[styles.container, { shadowColor: tint, backgroundColor: surface }]}>
       <ThemedText
         style={[
           styles.timer,
@@ -32,7 +33,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.03)',
     borderWidth: 2,
     borderColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },

@@ -21,6 +21,7 @@ export default function UsernameModal() {
   const router = useRouter();
   const tint = useThemeColor({}, 'tint');
   const textColor = useThemeColor({}, 'text');
+  const mutedText = useThemeColor({}, 'mutedText');
   const setUser = useUserStore((s) => s.setUser);
 
   const [username, setUsername] = useState('');
@@ -54,7 +55,7 @@ export default function UsernameModal() {
       <ThemedText type="title" style={styles.title}>
         Choose a Username
       </ThemedText>
-      <ThemedText style={styles.subtitle}>
+      <ThemedText style={[styles.subtitle, { color: mutedText }]}>
         This will be shown on the leaderboard.
       </ThemedText>
 
@@ -105,7 +106,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     textAlign: 'center',
-    opacity: 0.6,
     marginBottom: 32,
     fontSize: 16,
   },
@@ -136,6 +136,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.65,
   },
 });

@@ -36,6 +36,11 @@ export const schema = /* GraphQL */ `
     userGames(userId: ID!, limit: Int = 20): [Game!]!
   }
 
+  type Subscription {
+    """Fires whenever a new score is submitted so clients can update leaderboard in real time."""
+    leaderboardUpdated: Boolean!
+  }
+
   type Mutation {
     """Create a new user with a unique username."""
     createUser(username: String!): User!

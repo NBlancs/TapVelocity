@@ -28,6 +28,7 @@ async function main() {
     schema,
     resolvers,
     graphiql: isDev, // GraphiQL UI at /graphiql in development
+    subscription: true,
   });
 
   // Health check endpoint

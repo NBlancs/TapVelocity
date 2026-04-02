@@ -1,11 +1,12 @@
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { gql, useQuery } from '@apollo/client';
+import { AppState, FlatList, StyleSheet, View } from 'react-native';
+import { gql, useQuery, useSubscription } from '@apollo/client';
 import { useIsFocused } from '@react-navigation/native';
 import { useEffect } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useUserStore } from '@/stores/user-store';
 
 const LEADERBOARD_QUERY = gql`
   query Leaderboard($limit: Int) {
@@ -21,6 +22,12 @@ const LEADERBOARD_QUERY = gql`
   }
 `;
 
+const LEADERBOARD_UPDATED_SUBSCRIPTION = gql`
+  subscription LeaderboardUpdated {
+    leaderboardUpdated
+  }
+`;
+
 interface LeaderboardEntry {
   rank: number;
   tapCount: number;
@@ -30,7 +37,10 @@ interface LeaderboardEntry {
 
 export default function LeaderboardScreen() {
   const tint = useThemeColor({}, 'tint');
+  const mutedText = useThemeColor({}, 'mutedText');
   const isFocused = useIsFocused();
+  const currentUserId = useUserStore((s) => s.userId);
+  const currentUsername = useUserStore((s) => s.username);
   const { data, loading, refetch, startPolling, stopPolling } = useQuery<{
     leaderboard: LeaderboardEntry[];
   }>(LEADERBOARD_QUERY, {
@@ -38,30 +48,61 @@ export default function LeaderboardScreen() {
     notifyOnNetworkStatusChange: true,
   });
 
+  useSubscription(LEADERBOARD_UPDATED_SUBSCRIPTION, {
+    skip: !isFocused,
+    onData: () => {
+      void refetch();
+    },
+  });
+
   useEffect(() => {
     if (isFocused) {
+      // Always force a fresh fetch when tab becomes active.
+      void refetch();
       startPolling(3000);
       return () => stopPolling();
     }
 
     stopPolling();
     return undefined;
-  }, [isFocused, startPolling, stopPolling]);
+  }, [isFocused, refetch, startPolling, stopPolling]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && isFocused) {
+        void refetch();
+      }
+    });
+
+    return () => sub.remove();
+  }, [isFocused, refetch]);
 
   const entries = data?.leaderboard ?? [];
 
-  const renderItem = ({ item }: { item: LeaderboardEntry }) => (
-    <ThemedView style={styles.row}>
+  const renderItem = ({ item }: { item: LeaderboardEntry }) => {
+    const isCurrentUser = item.user.id === currentUserId;
+
+    return (
+      <ThemedView
+        style={[
+          styles.row,
+          isCurrentUser && { borderColor: tint, borderWidth: 2, backgroundColor: `${tint}15` },
+        ]}
+      >
       <ThemedText style={[styles.rank, { color: tint }]}>#{item.rank}</ThemedText>
       <View style={styles.info}>
-        <ThemedText style={styles.username}>{item.user.username}</ThemedText>
-        <ThemedText style={styles.detail}>
+          <ThemedText style={styles.username}>
+            {item.user.username}
+            {isCurrentUser ? ' (You)' : ''}
+          </ThemedText>
+        <ThemedText style={[styles.detail, { color: mutedText }]}>
           {item.tapCount} taps · Top {(100 - item.percentile).toFixed(1)}%
         </ThemedText>
       </View>
       <ThemedText style={[styles.tapCount, { color: tint }]}>{item.tapCount}</ThemedText>
-    </ThemedView>
-  );
+      </ThemedView>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -69,17 +110,18 @@ export default function LeaderboardScreen() {
         Leaderboard
       </ThemedText>
 
+      {currentUsername && (
+        <ThemedText style={[styles.currentUser, { color: mutedText }]}>You are: {currentUsername}</ThemedText>
+      )}
+
       {entries.length === 0 && !loading ? (
-        <ThemedText style={styles.empty}>No games played yet. Be the first!</ThemedText>
+        <ThemedText style={[styles.empty, { color: mutedText }]}>No games played yet. Be the first!</ThemedText>
       ) : (
         <FlatList
           data={entries}
           renderItem={renderItem}
           keyExtractor={(item) => `${item.rank}-${item.user.id}`}
           contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={() => refetch()} />
-          }
         />
       )}
     </ThemedView>
@@ -99,6 +141,11 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: 16,
     paddingBottom: 32,
+  },
+  currentUser: {
+    textAlign: 'center',
+    fontSize: 14,
+    marginBottom: 12,
   },
   row: {
     flexDirection: 'row',
@@ -123,7 +170,6 @@ const styles = StyleSheet.create({
   },
   detail: {
     fontSize: 13,
-    opacity: 0.6,
   },
   tapCount: {
     fontSize: 20,
@@ -132,7 +178,6 @@ const styles = StyleSheet.create({
   empty: {
     textAlign: 'center',
     marginTop: 40,
-    opacity: 0.6,
     fontSize: 16,
   },
 });

@@ -1,30 +1,42 @@
 import { create } from 'zustand';
 
 export type GameStatus = 'idle' | 'countdown' | 'playing' | 'finished';
+export type GameMode = 'single' | 'duo';
 
 interface GameState {
+  mode: GameMode;
   status: GameStatus;
   taps: number;
+  playerOneTaps: number;
+  playerTwoTaps: number;
   timeRemaining: number;
   startTime: number | null;
 
+  setMode: (mode: GameMode) => void;
   startGame: () => void;
   beginPlaying: () => void;
-  recordTap: () => void;
+  recordTap: (player?: 1 | 2) => void;
   tick: () => void;
   resetGame: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
+  mode: 'single',
   status: 'idle',
   taps: 0,
+  playerOneTaps: 0,
+  playerTwoTaps: 0,
   timeRemaining: 10,
   startTime: null,
+
+  setMode: (mode) => set({ mode }),
 
   startGame: () =>
     set({
       status: 'countdown',
       taps: 0,
+      playerOneTaps: 0,
+      playerTwoTaps: 0,
       timeRemaining: 10,
       startTime: null,
     }),
@@ -35,10 +47,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       startTime: Date.now(),
     }),
 
-  recordTap: () => {
-    const { status } = get();
+  recordTap: (player = 1) => {
+    const { status, mode } = get();
     if (status === 'playing') {
-      set((state) => ({ taps: state.taps + 1 }));
+      if (mode === 'duo') {
+        set((state) => ({
+          playerOneTaps: player === 1 ? state.playerOneTaps + 1 : state.playerOneTaps,
+          playerTwoTaps: player === 2 ? state.playerTwoTaps + 1 : state.playerTwoTaps,
+        }));
+      } else {
+        set((state) => ({ taps: state.taps + 1 }));
+      }
     }
   },
 
@@ -60,6 +79,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       status: 'idle',
       taps: 0,
+      playerOneTaps: 0,
+      playerTwoTaps: 0,
       timeRemaining: 10,
       startTime: null,
     }),

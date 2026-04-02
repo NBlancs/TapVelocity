@@ -64,7 +64,11 @@ export const resolvers = {
       });
     },
 
-    submitGame: async (_root: unknown, { userId, tapCount }: { userId: string; tapCount: number }) => {
+    submitGame: async (
+      _root: unknown,
+      { userId, tapCount }: { userId: string; tapCount: number },
+      ctx: any
+    ) => {
       // Calculate percentile: percentage of games this score beats
       const [stats] = await prisma.$queryRaw<{ total: bigint; beaten: bigint }[]>`
         SELECT
@@ -87,7 +91,25 @@ export const resolvers = {
         include: { user: true },
       });
 
+      ctx.pubsub.publish({
+        topic: "LEADERBOARD_UPDATED",
+        payload: true,
+      });
+
       return game;
+    },
+  },
+
+  Subscription: {
+    leaderboardUpdated: {
+      subscribe: async (
+        _root: unknown,
+        _args: unknown,
+        ctx: any
+      ) => {
+        return ctx.pubsub.subscribe("LEADERBOARD_UPDATED");
+      },
+      resolve: () => true,
     },
   },
 

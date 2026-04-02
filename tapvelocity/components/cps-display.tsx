@@ -9,11 +9,12 @@ interface CPSDisplayProps {
 
 export function CPSDisplay({ taps, timeRemaining }: CPSDisplayProps) {
   const tint = useThemeColor({}, 'tint');
+  const surface = useThemeColor({}, 'surface');
   const elapsed = 10 - timeRemaining;
   const cps = elapsed > 0 ? (taps / elapsed).toFixed(1) : '0.0';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: surface }]}>
       <ThemedText style={[styles.cps, { color: tint }]}>
         {cps} CPS
       </ThemedText>
@@ -26,7 +27,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     marginVertical: 4,
   },
   cps: {
