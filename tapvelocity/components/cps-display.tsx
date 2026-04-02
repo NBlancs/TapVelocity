@@ -30,9 +30,9 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   cps: {
-    fontSize: 24, // increased slightly
-    lineHeight: 32, // fix clipping
-    fontWeight: '700', // bolder
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '700',
     textAlign: 'center',
     letterSpacing: 1,
   },

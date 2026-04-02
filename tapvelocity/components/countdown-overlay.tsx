@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   number: {
-    fontSize: 140, // Increased size
-    lineHeight: 160, // Ensure no clipping
+    fontSize: 140,
+    lineHeight: 160,
     fontWeight: '900',
     letterSpacing: -2,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   goText: {
-    fontSize: 100, // Increased size
-    lineHeight: 120, // Ensure no clipping
+    fontSize: 100,
+    lineHeight: 120,
     fontWeight: '900',
     letterSpacing: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',

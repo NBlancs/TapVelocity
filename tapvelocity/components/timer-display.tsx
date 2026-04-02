@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   timer: {
-    fontSize: 64, // Slightly scaled down to fit nicely
-    lineHeight: 76, // Fix clipping on Android
+    fontSize: 64,
+    lineHeight: 76,
     fontWeight: '800',
     textAlign: 'center',
     fontVariant: ['tabular-nums'],

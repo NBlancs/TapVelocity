@@ -106,7 +106,12 @@ export default function LeaderboardScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
+      <ThemedText
+        type="title"
+        style={styles.title}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         Leaderboard
       </ThemedText>
 
@@ -137,6 +142,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     paddingHorizontal: 16,
+    fontSize: 26,
+    lineHeight: 32,
   },
   list: {
     paddingHorizontal: 16,

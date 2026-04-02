@@ -150,7 +150,12 @@ export default function GameScreen() {
           style={styles.centeredSection}
           exiting={FadeOutUp.duration(400)}
         >
-          <ThemedText type="title" style={styles.appTitle}>
+          <ThemedText
+            type="title"
+            style={styles.appTitle}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
             TapVelocity
           </ThemedText>
           <ThemedText style={[styles.subtitle, { color: mutedText }]}>
@@ -289,6 +294,8 @@ const styles = StyleSheet.create({
   },
   appTitle: {
     textAlign: 'center',
+    fontSize: 28,
+    lineHeight: 34,
   },
   subtitle: {
     textAlign: 'center',
@@ -297,16 +304,16 @@ const styles = StyleSheet.create({
   startButton: {
     paddingVertical: 20,
     paddingHorizontal: 64,
-    borderRadius: 100, // Pill shape
+    borderRadius: 100,
     marginTop: 24,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 6, // for Android
+    elevation: 6,
   },
   startText: {
     fontSize: 28,
-    lineHeight: 36, // fix clipping
+    lineHeight: 36,
     fontWeight: '900',
     letterSpacing: 4,
   },

@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 18,
+    fontFamily: 'PressStart2P_400Regular',
     marginBottom: 16,
   },
   error: {

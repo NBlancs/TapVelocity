@@ -57,27 +57,27 @@ export function TapButton({ tapCount, onTap }: TapButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    width: 240, // Increased from 200
-    height: 240, // Increased from 200
-    borderRadius: 120, // Half of width/height
-    borderWidth: 4, // Thicker border
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 8, // For Android shadow
+    elevation: 8,
   },
   tapLabel: {
     fontSize: 32,
-    lineHeight: 40, // Prevent clipping
-    fontWeight: '800', // Bolder
+    lineHeight: 40,
+    fontWeight: '800',
     letterSpacing: 4,
     opacity: 0.8,
   },
   tapCount: {
     fontSize: 64,
-    lineHeight: 76, // Prevent clipping
+    lineHeight: 76,
     fontWeight: '900',
     marginTop: 4,
   },

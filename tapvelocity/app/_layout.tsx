@@ -3,6 +3,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { ApolloProvider } from '@apollo/client';
+import { useFonts } from 'expo-font';
+import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { apolloClient } from '@/lib/apollo';
@@ -13,6 +15,13 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded] = useFonts({
+    PressStart2P_400Regular,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <ApolloProvider client={apolloClient}>
