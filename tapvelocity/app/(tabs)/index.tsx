@@ -11,10 +11,12 @@ import { TimerDisplay } from '@/components/timer-display';
 import { CPSDisplay } from '@/components/cps-display';
 import { ResultsCard } from '@/components/results-card';
 import { CountdownOverlay } from '@/components/countdown-overlay';
+import { SlashOverlay } from '@/components/slash-overlay';
 import { useGameStore } from '@/stores/game-store';
 import { useUserStore } from '@/stores/user-store';
 import { useGameLoop } from '@/hooks/use-game-loop';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useSlashSound } from '@/hooks/use-slash-sound';
 import { calculateOptimisticPercentile } from '@/utils/calculate-percentile';
 
 const SUBMIT_GAME = gql`
@@ -54,10 +56,21 @@ export default function GameScreen() {
     resetGame,
   } = useGameStore();
   const userId = useUserStore((s) => s.userId);
+  const clearUser = useUserStore((s) => s.clearUser);
   const [hasHydrated, setHasHydrated] = useState(false);
   const duoArenaRef = useRef<View | null>(null);
   const [duoArenaFrame, setDuoArenaFrame] = useState({ top: 0, height: 0 });
   const hasSubmitted = useRef(false);
+
+  // Slash effects
+  const playSlash = useSlashSound();
+  const spawnSlashRef = useRef<(() => void) | null>(null);
+
+  const handleTap = useCallback(() => {
+    recordTap(1);
+    playSlash();
+    spawnSlashRef.current?.();
+  }, [recordTap, playSlash]);
 
   // Track store hydration without triggering a persist write
   useEffect(() => {
@@ -96,9 +109,18 @@ export default function GameScreen() {
   useEffect(() => {
     if (status === 'finished' && mode === 'single' && userId && !hasSubmitted.current) {
       hasSubmitted.current = true;
-      submitGame({ variables: { userId, tapCount: taps } });
+      submitGame({ variables: { userId, tapCount: taps } }).catch((err) => {
+        // If the server says the userId is stale, clear it so the registration
+        // modal reappears automatically on the next render cycle.
+        const isStaleUser = err?.graphQLErrors?.some(
+          (e: any) => e?.extensions?.code === 'USER_NOT_FOUND'
+        );
+        if (isStaleUser) {
+          clearUser();
+        }
+      });
     }
-  }, [status, mode, userId, taps, submitGame]);
+  }, [status, mode, userId, taps, submitGame, clearUser]);
 
   // Redirect to username modal if no user (wait for hydration first)
   useEffect(() => {
@@ -213,12 +235,18 @@ export default function GameScreen() {
       {status === 'playing' && (
         mode === 'single' ? (
           <Animated.View
-            style={styles.centeredSection}
+            style={styles.singlePlayerWrapper}
             entering={FadeInDown.duration(400)}
           >
-            <TimerDisplay timeRemaining={timeRemaining} />
-            <CPSDisplay taps={taps} timeRemaining={timeRemaining} />
-            <TapButton tapCount={taps} onTap={() => recordTap(1)} />
+            <SlashOverlay
+              color={tint}
+              onRegisterSpawn={(fn) => { spawnSlashRef.current = fn; }}
+            />
+            <View style={styles.centeredSection}>
+              <TimerDisplay timeRemaining={timeRemaining} />
+              <CPSDisplay taps={taps} timeRemaining={timeRemaining} />
+              <TapButton tapCount={taps} onTap={handleTap} />
+            </View>
           </Animated.View>
         ) : (
           <Animated.View
@@ -321,6 +349,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 24,
+  },
+  singlePlayerWrapper: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
   modeRow: {
     flexDirection: 'row',

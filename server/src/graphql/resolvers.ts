@@ -69,6 +69,15 @@ export const resolvers = {
       { userId, tapCount }: { userId: string; tapCount: number },
       ctx: any
     ) => {
+      // Verify the user still exists (guards against stale local userId after a DB reset)
+      const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (!existingUser) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("User not found. Please create a new username.", {
+          extensions: { code: "USER_NOT_FOUND" },
+        });
+      }
+
       // Calculate percentile: percentage of games this score beats
       const [stats] = await prisma.$queryRaw<{ total: bigint; beaten: bigint }[]>`
         SELECT
