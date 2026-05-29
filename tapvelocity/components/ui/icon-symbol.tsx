@@ -20,6 +20,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'hand.tap.fill': 'touch-app',
   'trophy.fill': 'emoji-events',
+  'gearshape.fill': 'settings',
 } as IconMapping;
 
 /**

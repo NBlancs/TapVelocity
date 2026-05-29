@@ -17,6 +17,7 @@ import { useUserStore } from '@/stores/user-store';
 import { useGameLoop } from '@/hooks/use-game-loop';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useSlashSound } from '@/hooks/use-slash-sound';
+import { useBackgroundMusic } from '@/hooks/use-background-music';
 import { calculateOptimisticPercentile } from '@/utils/calculate-percentile';
 
 const SUBMIT_GAME = gql`
@@ -84,6 +85,7 @@ export default function GameScreen() {
   }, []);
 
   useGameLoop();
+  useBackgroundMusic();
 
   // Fetch leaderboard data for optimistic percentile calculation
   const { data: leaderboardData } = useQuery(LEADERBOARD_QUERY, {
