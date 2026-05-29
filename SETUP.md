@@ -89,14 +89,17 @@ NODE_ENV=development
 
 Update `DATABASE_URL` if your PostgreSQL credentials or port differ.
 
-### 2.2 Run Database Migrations
+### 2.2 Run Database Migrations & Seeding
 
-Generate the Prisma client and apply migrations:
+Generate the Prisma client, apply database migrations, and seed the leaderboard with default player entries:
 
 ```bash
 npm run db:generate
 npm run db:migrate
+npm run db:seed
 ```
+
+This creates 5 default high-scores so the global leaderboard is populated.
 
 > You can inspect the database visually with **Prisma Studio**:
 >
@@ -152,7 +155,17 @@ This launches the Expo dev server. From there you can:
 - Press **`w`** to open in a web browser
 - Scan the QR code with the **Expo Go** app on a physical device
 
-### 3.2 Platform-Specific Commands
+### 3.2 Standalone Builds (APK) & Server Auto-Discovery
+
+When running the app inside a standalone production APK (where Expo's default Go URL resolution returns undefined), you can dynamically connect the app to your laptop's backend over the local Wi-Fi:
+
+1. Launch the app on your device.
+2. On the **Choose a Username** screen, tap **⚙️ Configure Server** at the bottom.
+3. Tap **Auto-Discover Server**. This will scan 9 subnets in parallel (2,286 IPs) to automatically locate and bind the app to your laptop's active dev server.
+4. Alternatively, type your laptop's local IP manually (e.g. `192.168.1.57`). Normalization will auto-append the port (`:4000`) and API path (`/graphql`).
+5. Tap **Test & Save** to perform a health check validation and save the configuration.
+
+### 3.3 Platform-Specific Commands
 
 ```bash
 npm run android   # start on Android

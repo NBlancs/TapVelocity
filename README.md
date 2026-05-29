@@ -26,7 +26,7 @@ tapvelocity/
 
 ## Tech Stack
 
-- Mobile: React Native, Expo SDK 54, Expo Router, Apollo Client, Zustand
+- Mobile: React Native, Expo SDK 54, Expo Router, Apollo Client, Zustand, Expo Audio
 - Backend: Fastify 5, Mercurius (GraphQL), Prisma
 - Database: PostgreSQL
 - Language: TypeScript
@@ -48,6 +48,7 @@ cd server
 npm install
 npm run db:generate
 npm run db:migrate
+npm run db:seed     # Seed 5 players for the leaderboard
 npm run dev
 ```
 
@@ -73,6 +74,24 @@ Useful Expo commands:
 - `npm run ios` (macOS only)
 - `npm run web`
 
+## Key Features
+
+### Dynamic Server Discovery & Configuration
+To support production APK/standalone builds connecting to a local laptop backend, the app has a dedicated **Server Configuration** settings sheet:
+- **Parallel Subnet Scanning**: Automatically scans 9 common subnets in parallel (~2,286 IPs concurrently) with a `2500ms` timeout to locate your laptop's server.
+- **Manual URL Input**: Allows entering a custom URL/IP.
+- **URL Normalization**: Normalizes inputs (e.g. typing `192.168.1.57` auto-completes to `http://192.168.1.57:4000/graphql`).
+- **Health Validation**: Probes the server health check (`/health` with a `4000ms` timeout) before saving.
+
+### Dynamic Audio System
+The app features customized sound mechanics powered by `expo-audio`:
+- **Main Menu**: Looping ambient background music (`game_bg.mp3`).
+- **Countdown**: High-fidelity countdown sound (`countdown.mp3`) before gameplay.
+- **Singleplayer**: Immersive sword slashing sound effects (`slash.mp3`) on every button tap (using rapid-fire overlapping sound pools).
+- **Multiplayer**: High-intensity background music (`multiplayer_bg.mp3`) during duo matches.
+- **Game Over**: Game completion buzzer sound (`buzzer.mp3`).
+- **Volume Settings**: A new Settings tab allows adjusting music and SFX volumes individually (stored in a persisted Zustand store, defaulting to 50%).
+
 ## GraphQL API Summary
 
 ### Queries
@@ -96,6 +115,7 @@ Useful Expo commands:
 - `npm start` - Run compiled server
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:migrate` - Run Prisma migrations
+- `npm run db:seed` - Seed the database with 5 players
 - `npm run db:studio` - Open Prisma Studio
 
 ### Mobile (`tapvelocity/`)
@@ -108,9 +128,8 @@ Useful Expo commands:
 
 ## Development Notes
 
-- Keep the backend running before launching the app to ensure leaderboard and submit flows work.
-- If your API URL changes, update the Apollo client configuration in `tapvelocity/lib/apollo.ts`.
-- The `plans/` folder is documentation and can be excluded from commits if desired.
+- Make sure to seed the database (`npm run db:seed`) so the leaderboard doesn't look empty when first launching the app.
+- When packaging the standalone APK via EAS, use the **Configure Server** option on the username screen to dynamically scan and connect to your laptop's backend over local Wi-Fi.
 
 ## Troubleshooting
 

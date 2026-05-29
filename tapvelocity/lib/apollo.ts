@@ -27,28 +27,19 @@ class AppInMemoryCache extends InMemoryCache {
   }
 }
 
-const hostFromExpo =
-  Constants.expoConfig?.hostUri?.split(':')[0] ||
-  (Constants as any).manifest2?.extra?.expoGo?.debuggerHost?.split(':')[0];
+import { useServerStore } from '@/stores/server-store';
 
-const fallbackHost = Platform.select({
-  android: '10.0.2.2', // Android emulator
-  default: 'localhost',
+const httpLink = new HttpLink({
+  uri: () => {
+    return useServerStore.getState().serverUrl;
+  },
 });
-
-const backendHost = hostFromExpo ?? fallbackHost;
-
-const httpUri =
-  process.env.EXPO_PUBLIC_GRAPHQL_HTTP_URL ?? `http://${backendHost}:4000/graphql`;
-
-const wsUri =
-  process.env.EXPO_PUBLIC_GRAPHQL_WS_URL ?? `ws://${backendHost}:4000/graphql`;
-
-const httpLink = new HttpLink({ uri: httpUri });
 
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: wsUri,
+    url: () => {
+      return useServerStore.getState().wsUrl;
+    },
   })
 );
 
