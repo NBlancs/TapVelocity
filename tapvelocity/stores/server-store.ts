@@ -1,16 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
-
-const getDefaultHost = () => {
-  return Platform.select({
-    android: '10.0.2.2',
-    default: 'localhost',
-  });
-};
-
-const DEFAULT_SERVER_URL = `http://${getDefaultHost()}:4000/graphql`;
+const DEFAULT_SERVER_URL = 'https://tapvelocity-production.up.railway.app/graphql';
 
 interface ServerState {
   serverUrl: string;
