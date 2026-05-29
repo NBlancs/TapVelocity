@@ -28,10 +28,20 @@ function promiseAny<T>(promises: Promise<T>[]): Promise<T> {
 }
 
 /**
+ * Helper to determine if a hostname is localhost or a raw IP address.
+ */
+function isLocalHostOrIp(hostname: string): boolean {
+  if (hostname === 'localhost') return true;
+  const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+  return ipRegex.test(hostname);
+}
+
+/**
  * Normalize a user-entered URL to ensure it has the correct port and path.
  * e.g. "192.168.1.57" => "http://192.168.1.57:4000/graphql"
  *      "http://192.168.1.57" => "http://192.168.1.57:4000/graphql"
  *      "http://192.168.1.57:4000" => "http://192.168.1.57:4000/graphql"
+ *      "https://tapvelocity-production.up.railway.app" => "https://tapvelocity-production.up.railway.app/graphql"
  */
 export function normalizeServerUrl(raw: string): string {
   let url = raw.trim().replace(/\/+$/, '');
@@ -43,8 +53,8 @@ export function normalizeServerUrl(raw: string): string {
 
   try {
     const parsed = new URL(url);
-    // Add default port if none specified
-    if (!parsed.port) {
+    // Add default port only if none specified AND it's a local address/IP
+    if (!parsed.port && isLocalHostOrIp(parsed.hostname)) {
       parsed.port = String(DEFAULT_PORT);
     }
     // Ensure the path ends with /graphql
@@ -54,8 +64,11 @@ export function normalizeServerUrl(raw: string): string {
     return parsed.toString().replace(/\/+$/, '');
   } catch {
     // If URL parsing fails, try a basic approach
-    if (!url.includes(`:${DEFAULT_PORT}`)) {
-      url += `:${DEFAULT_PORT}`;
+    const host = url.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+    if (isLocalHostOrIp(host)) {
+      if (!url.includes(`:${DEFAULT_PORT}`)) {
+        url += `:${DEFAULT_PORT}`;
+      }
     }
     if (!url.includes('/graphql')) {
       url += GRAPHQL_PATH;
@@ -70,7 +83,8 @@ export function normalizeServerUrl(raw: string): string {
 function getBaseUrl(fullUrl: string): string {
   try {
     const parsed = new URL(fullUrl);
-    return `${parsed.protocol}//${parsed.hostname}:${parsed.port || DEFAULT_PORT}`;
+    const portPart = parsed.port ? `:${parsed.port}` : '';
+    return `${parsed.protocol}//${parsed.hostname}${portPart}`;
   } catch {
     return fullUrl.replace(/\/graphql.*$/, '');
   }
