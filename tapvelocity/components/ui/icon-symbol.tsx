@@ -21,6 +21,7 @@ const MAPPING = {
   'hand.tap.fill': 'touch-app',
   'trophy.fill': 'emoji-events',
   'gearshape.fill': 'settings',
+  'cart.fill': 'shopping-cart',
 } as IconMapping;
 
 /**

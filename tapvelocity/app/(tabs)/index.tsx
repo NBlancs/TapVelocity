@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View, GestureResponderEvent, Image, Modal, Platform, Animated as RNAnimated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import Animated, { FadeInDown, FadeOutUp, FadeIn, FadeOut } from 'react-native-reanimated';
@@ -13,7 +14,7 @@ import { ResultsCard } from '@/components/results-card';
 import { CountdownOverlay } from '@/components/countdown-overlay';
 import { SlashOverlay } from '@/components/slash-overlay';
 import { useGameStore } from '@/stores/game-store';
-import { useUserStore, getLevelInfo, RANK_BADGES } from '@/stores/user-store';
+import { useUserStore, getLevelInfo, RANK_BADGES, DAMAGE_INDICATORS } from '@/stores/user-store';
 import { useGameLoop } from '@/hooks/use-game-loop';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useSlashSound } from '@/hooks/use-slash-sound';
@@ -43,6 +44,20 @@ const BOSSES = [
     damaged: require('@/assets/images/monster3_damaged.png'),
     defeated: require('@/assets/images/monster_defeated.png'),
   },
+  {
+    name: 'Colossus',
+    maxHp: 200,
+    idle: require('@/assets/images/monster4.png'),
+    damaged: require('@/assets/images/monster4_damaged.png'),
+    defeated: require('@/assets/images/monster_defeated.png'),
+  },
+  {
+    name: 'Ancient Overlord',
+    maxHp: 500,
+    idle: require('@/assets/images/monster5.png'),
+    damaged: require('@/assets/images/monster5_damaged.png'),
+    defeated: require('@/assets/images/monster_defeated.png'),
+  },
 ];
 
 interface DamageIndicator {
@@ -60,6 +75,7 @@ interface FloatingIndicatorProps {
 function FloatingIndicator({ x, y, onDone }: FloatingIndicatorProps) {
   const animY = useRef(new RNAnimated.Value(0)).current;
   const animOpacity = useRef(new RNAnimated.Value(1)).current;
+  const attackDamageTier = useUserStore((s) => s.attackDamageTier);
 
   useEffect(() => {
     RNAnimated.parallel([
@@ -92,7 +108,7 @@ function FloatingIndicator({ x, y, onDone }: FloatingIndicatorProps) {
       ]}
     >
       <Image
-        source={require('@/assets/images/minuslife.png')}
+        source={DAMAGE_INDICATORS[attackDamageTier] || require('@/assets/images/minuslife.png')}
         style={styles.floatingIndicatorImage}
       />
     </RNAnimated.View>
@@ -120,6 +136,7 @@ const LEADERBOARD_QUERY = gql`
 export default function GameScreen() {
   const router = useRouter();
   const tint = useThemeColor({}, 'tint');
+  const insets = useSafeAreaInsets();
   const mutedText = useThemeColor({}, 'mutedText');
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
@@ -141,6 +158,9 @@ export default function GameScreen() {
   const username = useUserStore((s) => s.username);
   const totalTaps = useUserStore((s) => s.totalTaps);
   const addTaps = useUserStore((s) => s.addTaps);
+  const currency = useUserStore((s) => s.currency);
+  const attackDamageTier = useUserStore((s) => s.attackDamageTier);
+  const addCurrency = useUserStore((s) => s.addCurrency);
 
   const [hasHydrated, setHasHydrated] = useState(false);
   const duoArenaRef = useRef<View | null>(null);
@@ -183,7 +203,7 @@ export default function GameScreen() {
 
   const damageBoss = useCallback(() => {
     setBossHp((prevHp) => {
-      const nextHp = Math.max(0, prevHp - 1);
+      const nextHp = Math.max(0, prevHp - attackDamageTier);
       if (nextHp === 0) {
         setBossState('defeated');
 
@@ -192,7 +212,7 @@ export default function GameScreen() {
         }
 
         setTimeout(() => {
-          if (bossIndex < 2) {
+          if (bossIndex < BOSSES.length - 1) {
             const nextIndex = bossIndex + 1;
             setBossIndex(nextIndex);
             setBossHp(BOSSES[nextIndex].maxHp);
@@ -212,7 +232,7 @@ export default function GameScreen() {
       }
       return nextHp;
     });
-  }, [bossIndex, finishGame]);
+  }, [bossIndex, finishGame, attackDamageTier]);
 
   const spawnDamageIndicator = useCallback((x: number, y: number) => {
     const id = damageIdRef.current++;
@@ -276,7 +296,7 @@ export default function GameScreen() {
     };
   }, []);
 
-  // Handle game end leveling up
+  // Handle game end leveling up and rewards
   useEffect(() => {
     if (status === 'finished') {
       const gameTaps = mode === 'single' ? taps : playerOneTaps;
@@ -284,6 +304,10 @@ export default function GameScreen() {
         const oldLevelInfo = getLevelInfo(totalTaps);
         addTaps(gameTaps);
         const newLevelInfo = getLevelInfo(totalTaps + gameTaps);
+
+        if (mode === 'single') {
+          addCurrency(gameTaps);
+        }
 
         if (newLevelInfo.level > oldLevelInfo.level) {
           setLevelUpInfo({
@@ -295,7 +319,7 @@ export default function GameScreen() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, addCurrency]);
 
   // Track store hydration without triggering a persist write
   useEffect(() => {
@@ -392,7 +416,7 @@ export default function GameScreen() {
         : 'Player 2 wins!';
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { paddingTop: insets.top || 16, paddingBottom: insets.bottom || 16 }]}>
       {/* Level Up Celebration Modal */}
       {levelUpInfo && (
         <Modal transparent visible={!!levelUpInfo} animationType="fade">
@@ -501,8 +525,19 @@ export default function GameScreen() {
                 mode === 'duo' && { borderColor: tint, backgroundColor: `${tint}20` },
               ]}
             >
-              <ThemedText style={styles.modeText}>2 Players</ThemedText>
+              <ThemedText style={styles.modeText}>PVP Mode</ThemedText>
             </Pressable>
+          </View>
+
+          {/* Currency Wallet Display */}
+          <View style={[styles.menuWallet, { backgroundColor: surface, borderColor: border }]}>
+            <Image
+              source={require('@/assets/images/currency.png')}
+              style={styles.menuWalletIcon}
+            />
+            <ThemedText style={styles.menuWalletText}>
+              {currency} coins
+            </ThemedText>
           </View>
           <Pressable
             onPress={startGame}
@@ -653,7 +688,7 @@ export default function GameScreen() {
           />
         ) : (
           <ThemedView style={styles.duoResultCard}>
-            <ThemedText type="title" style={styles.scoreTitle}>2 Player Results</ThemedText>
+            <ThemedText type="title" style={styles.scoreTitle}>PVP Results</ThemedText>
             <ThemedText style={[styles.duoWinner, { color: tint }]}>{duoWinner}</ThemedText>
             <PushBar
               player1Taps={playerOneTaps}
@@ -689,38 +724,38 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    gap: 24,
+    padding: 16,
+    gap: 12,
   },
   appTitle: {
     textAlign: 'center',
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 24,
+    lineHeight: 28,
   },
   subtitle: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 14,
   },
   startButton: {
-    paddingVertical: 20,
+    paddingVertical: 14,
     paddingHorizontal: 64,
     borderRadius: 100,
-    marginTop: 24,
+    marginTop: 10,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   startText: {
-    fontSize: 28,
-    lineHeight: 36,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '900',
     letterSpacing: 4,
   },
   centeredSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
+    gap: 12,
   },
   singlePlayerWrapper: {
     flex: 1,
@@ -731,14 +766,14 @@ const styles = StyleSheet.create({
   },
   modeRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
+    marginTop: 4,
   },
   modeButton: {
     borderWidth: 2,
     borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   modeText: {
     fontSize: 14,
@@ -860,11 +895,11 @@ const styles = StyleSheet.create({
     width: 280,
     borderWidth: 1.5,
     borderRadius: 16,
-    padding: 16,
+    padding: 10,
     alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
-    marginBottom: 8,
+    gap: 4,
+    marginTop: 4,
+    marginBottom: 4,
   },
   usernameText: {
     fontSize: 16,
@@ -976,10 +1011,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   hudRankBadge: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     resizeMode: 'contain',
     marginBottom: 4,
+  },
+  menuWallet: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    borderWidth: 1.5,
+    gap: 8,
+    marginTop: 4,
+  },
+  menuWalletIcon: {
+    width: 22,
+    height: 22,
+    resizeMode: 'contain',
+  },
+  menuWalletText: {
+    fontSize: 12,
+    fontWeight: '800',
   },
   floatingIndicatorImage: {
     width: '100%',

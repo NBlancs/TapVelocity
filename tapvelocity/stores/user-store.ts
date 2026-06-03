@@ -30,6 +30,14 @@ export const RANK_BADGES: Record<string, any> = {
   Grandmaster: require('@/assets/images/grandmaster_rank.png'),
 };
 
+export const DAMAGE_INDICATORS: Record<number, any> = {
+  1: require('@/assets/images/minuslife.png'),
+  2: require('@/assets/images/two-minuslife.png'),
+  3: require('@/assets/images/three-minuslife.png'),
+  4: require('@/assets/images/four-minuslife.png'),
+  5: require('@/assets/images/five-minuslife.png'),
+};
+
 export function getLevelInfo(totalTaps: number): LevelInfo {
   let current = LEVEL_THRESHOLDS[0];
   let next = LEVEL_THRESHOLDS[1];
@@ -74,9 +82,15 @@ interface UserState {
   userId: string | null;
   username: string | null;
   totalTaps: number;
+  currency: number;
+  attackDamageTier: number;
+  timeExtensionSeconds: number;
   setUser: (userId: string, username: string) => void;
   clearUser: () => void;
   addTaps: (count: number) => void;
+  addCurrency: (amount: number) => void;
+  purchaseAttackUpgrade: (cost: number) => void;
+  purchaseTimeUpgrade: (cost: number) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -85,9 +99,23 @@ export const useUserStore = create<UserState>()(
       userId: null,
       username: null,
       totalTaps: 0,
+      currency: 0,
+      attackDamageTier: 1,
+      timeExtensionSeconds: 0,
       setUser: (userId, username) => set({ userId, username }),
       clearUser: () => set({ userId: null, username: null }),
       addTaps: (count) => set((state) => ({ totalTaps: state.totalTaps + count })),
+      addCurrency: (amount) => set((state) => ({ currency: state.currency + amount })),
+      purchaseAttackUpgrade: (cost) =>
+        set((state) => ({
+          currency: state.currency - cost,
+          attackDamageTier: Math.min(5, state.attackDamageTier + 1),
+        })),
+      purchaseTimeUpgrade: (cost) =>
+        set((state) => ({
+          currency: state.currency - cost,
+          timeExtensionSeconds: Math.min(10, state.timeExtensionSeconds + 1),
+        })),
     }),
     {
       name: 'tapvelocity-user',

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useUserStore } from './user-store';
 
 export type GameStatus = 'idle' | 'countdown' | 'playing' | 'finished';
 export type GameMode = 'single' | 'duo';
@@ -38,7 +39,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       taps: 0,
       playerOneTaps: 0,
       playerTwoTaps: 0,
-      timeRemaining: 10,
+      timeRemaining: 10 + useUserStore.getState().timeExtensionSeconds,
       startTime: null,
     }),
 
@@ -67,7 +68,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (status !== 'playing' || !startTime) return;
 
     const elapsed = (Date.now() - startTime) / 1000;
-    const remaining = Math.max(0, 10 - elapsed);
+    const duration = 10 + useUserStore.getState().timeExtensionSeconds;
+    const remaining = Math.max(0, duration - elapsed);
 
     if (remaining <= 0) {
       set({ status: 'finished', timeRemaining: 0 });
@@ -82,7 +84,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       taps: 0,
       playerOneTaps: 0,
       playerTwoTaps: 0,
-      timeRemaining: 10,
+      timeRemaining: 10 + useUserStore.getState().timeExtensionSeconds,
       startTime: null,
     }),
 
