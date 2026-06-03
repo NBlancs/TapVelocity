@@ -10,9 +10,18 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { useServerStore } from '@/stores/server-store';
 import { discoverLocalServer, probeServer } from '@/utils/serverDiscovery';
 
-const CREATE_USER = gql`
-  mutation CreateUser($username: String!) {
-    createUser(username: $username) {
+const REGISTER_USER = gql`
+  mutation Register($username: String!, $password: String!) {
+    register(username: $username, password: $password) {
+      id
+      username
+    }
+  }
+`;
+
+const LOGIN_USER = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
       id
       username
     }
@@ -28,7 +37,9 @@ export default function UsernameModal() {
   const border = useThemeColor({}, 'border');
   const setUser = useUserStore((s) => s.setUser);
 
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Server configuration states
@@ -39,22 +50,37 @@ export default function UsernameModal() {
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [createUser, { loading }] = useMutation(CREATE_USER);
+  const [registerUser, { loading: registerLoading }] = useMutation(REGISTER_USER);
+  const [loginUser, { loading: loginLoading }] = useMutation(LOGIN_USER);
+  const loading = registerLoading || loginLoading;
 
   const handleSubmit = async () => {
-    const trimmed = username.trim();
-    if (!trimmed) return;
+    const trimmedUser = username.trim();
+    const trimmedPass = password.trim();
+    if (!trimmedUser || !trimmedPass) return;
     setErrorMsg(null);
 
     try {
-      const { data } = await createUser({ variables: { username: trimmed } });
-      if (data?.createUser) {
-        setUser(data.createUser.id, data.createUser.username);
-        router.back();
+      if (mode === 'register') {
+        const { data } = await registerUser({
+          variables: { username: trimmedUser, password: trimmedPass },
+        });
+        if (data?.register) {
+          setUser(data.register.id, data.register.username);
+          router.back();
+        }
+      } else {
+        const { data } = await loginUser({
+          variables: { username: trimmedUser, password: trimmedPass },
+        });
+        if (data?.login) {
+          setUser(data.login.id, data.login.username);
+          router.back();
+        }
       }
     } catch (err: any) {
-      const msg = err?.message ?? 'Failed to create user';
-      if (msg.includes('Unique constraint')) {
+      const msg = err?.message ?? 'Authentication failed';
+      if (msg.includes('already taken') || msg.includes('Unique constraint')) {
         setErrorMsg('That username is already taken.');
       } else {
         setErrorMsg(msg);
@@ -172,11 +198,35 @@ export default function UsernameModal() {
         </View>
       </Modal>
 
+      {/* Tab Segment Controller */}
+      <View style={styles.tabContainer}>
+        <Pressable
+          onPress={() => {
+            setMode('login');
+            setErrorMsg(null);
+          }}
+          style={[styles.tabButton, mode === 'login' && { borderBottomColor: tint }]}
+        >
+          <ThemedText style={[styles.tabText, mode === 'login' && { color: tint }]}>Log In</ThemedText>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            setMode('register');
+            setErrorMsg(null);
+          }}
+          style={[styles.tabButton, mode === 'register' && { borderBottomColor: tint }]}
+        >
+          <ThemedText style={[styles.tabText, mode === 'register' && { color: tint }]}>Register</ThemedText>
+        </Pressable>
+      </View>
+
       <ThemedText type="title" style={styles.title}>
-        Choose a Username
+        {mode === 'login' ? 'Welcome Back' : 'Create Account'}
       </ThemedText>
       <ThemedText style={[styles.subtitle, { color: mutedText }]}>
-        This will be shown on the leaderboard.
+        {mode === 'login'
+          ? 'Log in to continue your tapping adventure.'
+          : 'Choose a username and password to start playing.'}
       </ThemedText>
 
       <TextInput
@@ -188,6 +238,19 @@ export default function UsernameModal() {
         autoCorrect={false}
         maxLength={20}
         style={[styles.input, { borderColor: tint, color: textColor }]}
+        returnKeyType="next"
+      />
+
+      <TextInput
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Password"
+        placeholderTextColor="#999"
+        secureTextEntry
+        autoCapitalize="none"
+        autoCorrect={false}
+        maxLength={32}
+        style={[styles.input, { borderColor: tint, color: textColor }]}
         onSubmitEditing={handleSubmit}
         returnKeyType="done"
       />
@@ -196,17 +259,19 @@ export default function UsernameModal() {
 
       <Pressable
         onPress={handleSubmit}
-        disabled={loading || !username.trim()}
+        disabled={loading || !username.trim() || !password.trim()}
         style={[
           styles.submitButton,
           { backgroundColor: tint },
-          (loading || !username.trim()) && styles.disabled,
+          (loading || !username.trim() || !password.trim()) && styles.disabled,
         ]}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <ThemedText style={styles.submitText}>Start Playing</ThemedText>
+          <ThemedText style={styles.submitText}>
+            {mode === 'login' ? 'Start Playing' : 'Register & Play'}
+          </ThemedText>
         )}
       </Pressable>
 
@@ -227,6 +292,25 @@ export default function UsernameModal() {
 }
 
 const styles = StyleSheet.create({
+  tabContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    marginBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#888',
+  },
   container: {
     flex: 1,
     alignItems: 'center',

@@ -103,7 +103,15 @@ export const useUserStore = create<UserState>()(
       attackDamageTier: 1,
       timeExtensionSeconds: 0,
       setUser: (userId, username) => set({ userId, username }),
-      clearUser: () => set({ userId: null, username: null }),
+      clearUser: () =>
+        set({
+          userId: null,
+          username: null,
+          totalTaps: 0,
+          currency: 0,
+          attackDamageTier: 1,
+          timeExtensionSeconds: 0,
+        }),
       addTaps: (count) => set((state) => ({ totalTaps: state.totalTaps + count })),
       addCurrency: (amount) => set((state) => ({ currency: state.currency + amount })),
       purchaseAttackUpgrade: (cost) =>

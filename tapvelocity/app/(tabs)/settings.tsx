@@ -30,6 +30,7 @@ export default function SettingsScreen() {
   const setSfxVolume = useSettingsStore((s) => s.setSfxVolume);
 
   const username = useUserStore((s) => s.username);
+  const clearUser = useUserStore((s) => s.clearUser);
 
   const [showRules, setShowRules] = useState(false);
   const [showRanks, setShowRanks] = useState(false);
@@ -48,6 +49,17 @@ export default function SettingsScreen() {
           <ThemedText style={[styles.username, { color: tint }]}>
             {username ?? 'Guest'}
           </ThemedText>
+
+          <Pressable
+            onPress={clearUser}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              { borderColor: border },
+              pressed && styles.signOutButtonPressed,
+            ]}
+          >
+            <ThemedText style={styles.signOutButtonText}>Sign Out</ThemedText>
+          </Pressable>
         </View>
 
         {/* ── Game Info Section ─────────────────────────────────── */}
@@ -433,5 +445,24 @@ const styles = StyleSheet.create({
     color: '#BBB',
     lineHeight: 15,
     marginTop: 2,
+  },
+  signOutButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    backgroundColor: 'rgba(229, 57, 53, 0.1)',
+    borderColor: '#e53935',
+  },
+  signOutButtonPressed: {
+    opacity: 0.8,
+    backgroundColor: 'rgba(229, 57, 53, 0.2)',
+  },
+  signOutButtonText: {
+    color: '#e53935',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

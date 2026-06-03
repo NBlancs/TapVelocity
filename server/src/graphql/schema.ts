@@ -46,6 +46,12 @@ export const schema = /* GraphQL */ `
     """Create a new user with a unique username."""
     createUser(username: String!): User!
 
+    """Register a new user with a username and password."""
+    register(username: String!, password: String!): User!
+
+    """Log in an existing user with a username and password."""
+    login(username: String!, password: String!): User!
+
     """Submit a completed game and compute the player's percentile."""
     submitGame(userId: ID!, tapCount: Int!): Game!
   }

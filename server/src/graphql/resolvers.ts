@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { hashPassword, verifyPassword } from "../lib/auth.js";
 
 export const resolvers = {
   Query: {
@@ -60,8 +61,67 @@ export const resolvers = {
   Mutation: {
     createUser: async (_root: unknown, { username }: { username: string }) => {
       return prisma.user.create({
-        data: { username },
+        data: {
+          username,
+          passwordHash: hashPassword("password123"),
+        },
       });
+    },
+
+    register: async (
+      _root: unknown,
+      { username, password }: { username: string; password: string }
+    ) => {
+      const trimmedUsername = username.trim();
+      const trimmedPassword = password.trim();
+      if (!trimmedUsername || !trimmedPassword) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("Username and password are required.");
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { username: trimmedUsername },
+      });
+      if (existingUser) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("That username is already taken.");
+      }
+
+      const passwordHash = hashPassword(trimmedPassword);
+      return prisma.user.create({
+        data: {
+          username: trimmedUsername,
+          passwordHash,
+        },
+      });
+    },
+
+    login: async (
+      _root: unknown,
+      { username, password }: { username: string; password: string }
+    ) => {
+      const trimmedUsername = username.trim();
+      const trimmedPassword = password.trim();
+      if (!trimmedUsername || !trimmedPassword) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("Username and password are required.");
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { username: trimmedUsername },
+      });
+      if (!user) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("Invalid username or password.");
+      }
+
+      const isValid = verifyPassword(trimmedPassword, user.passwordHash);
+      if (!isValid) {
+        const { GraphQLError } = await import("graphql");
+        throw new GraphQLError("Invalid username or password.");
+      }
+
+      return user;
     },
 
     submitGame: async (

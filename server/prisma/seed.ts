@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
+
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
 
 const SEED_USERS = [
   { username: 'TurboTapper', tapCount: 92 },
@@ -32,6 +39,7 @@ async function main() {
     const user = await prisma.user.create({
       data: {
         username: seed.username,
+        passwordHash: hashPassword('password123'),
       },
     });
 
