@@ -40,6 +40,7 @@ export default function UsernameModal() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Server configuration states
@@ -59,6 +60,17 @@ export default function UsernameModal() {
     const trimmedPass = password.trim();
     if (!trimmedUser || !trimmedPass) return;
     setErrorMsg(null);
+
+    if (mode === 'register') {
+      if (trimmedPass.length < 6) {
+        setErrorMsg('Password must be at least 6 characters.');
+        return;
+      }
+      if (trimmedPass !== confirmPassword.trim()) {
+        setErrorMsg('Passwords do not match.');
+        return;
+      }
+    }
 
     try {
       if (mode === 'register') {
@@ -204,6 +216,8 @@ export default function UsernameModal() {
           onPress={() => {
             setMode('login');
             setErrorMsg(null);
+            setPassword('');
+            setConfirmPassword('');
           }}
           style={[styles.tabButton, mode === 'login' && { borderBottomColor: tint }]}
         >
@@ -213,6 +227,8 @@ export default function UsernameModal() {
           onPress={() => {
             setMode('register');
             setErrorMsg(null);
+            setPassword('');
+            setConfirmPassword('');
           }}
           style={[styles.tabButton, mode === 'register' && { borderBottomColor: tint }]}
         >
@@ -251,19 +267,46 @@ export default function UsernameModal() {
         autoCorrect={false}
         maxLength={32}
         style={[styles.input, { borderColor: tint, color: textColor }]}
-        onSubmitEditing={handleSubmit}
-        returnKeyType="done"
+        returnKeyType={mode === 'register' ? 'next' : 'done'}
+        onSubmitEditing={() => {
+          if (mode === 'login') handleSubmit();
+        }}
       />
+
+      {mode === 'register' && (
+        <TextInput
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm Password"
+          placeholderTextColor="#999"
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          maxLength={32}
+          style={[styles.input, { borderColor: tint, color: textColor }]}
+          onSubmitEditing={handleSubmit}
+          returnKeyType="done"
+        />
+      )}
 
       {errorMsg && <ThemedText style={styles.error}>{errorMsg}</ThemedText>}
 
       <Pressable
         onPress={handleSubmit}
-        disabled={loading || !username.trim() || !password.trim()}
+        disabled={
+          loading ||
+          !username.trim() ||
+          !password.trim() ||
+          (mode === 'register' && !confirmPassword.trim())
+        }
         style={[
           styles.submitButton,
           { backgroundColor: tint },
-          (loading || !username.trim() || !password.trim()) && styles.disabled,
+          (loading ||
+            !username.trim() ||
+            !password.trim() ||
+            (mode === 'register' && !confirmPassword.trim())) &&
+            styles.disabled,
         ]}
       >
         {loading ? (

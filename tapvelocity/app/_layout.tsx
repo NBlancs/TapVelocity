@@ -32,10 +32,8 @@ export default function RootLayout() {
             name="modal"
             options={{
               presentation: 'modal',
-              title: 'Welcome',
+              headerShown: false,
               gestureEnabled: false,
-              headerBackVisible: false,
-              headerLeft: () => null,
             }}
           />
         </Stack>
