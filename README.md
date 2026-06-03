@@ -92,6 +92,20 @@ The app features customized sound mechanics powered by `expo-audio`:
 - **Game Over**: Game completion buzzer sound (`buzzer.mp3`).
 - **Volume Settings**: A new Settings tab allows adjusting music and SFX volumes individually (stored in a persisted Zustand store, defaulting to 50%).
 
+### Singleplayer Boss Battles
+Singleplayer mode features progression-based boss fights:
+- **Interactive Boss Arena**: Tap to attack and defeat three unique bosses (Gorgon with 40 HP, Behemoth with 80 HP, Shadow Dragon with 120 HP) within the 10-second timer.
+- **Damage & Defeat Visuals**: Every tap triggers a quick monster damage frame transition and spawns a floating `-1` damage indicator that floats up and fades out at the tap coordinate.
+- **Defeat Holds & Transitions**: Defeating a boss locks the image to a defeated state for 500ms, plays a defeat haptic notification / buzzer, and dynamically transitions to the next boss.
+- **Centered Slash Targeting**: Uses absolute screen coordinates relative to the monster to center the sword slash animations perfectly on the active boss's body.
+
+### Persistent Leveling System
+A gaming progress framework tied directly to player activity:
+- **Cumulative Progress**: Taps from singleplayer and multiplayer matches are persistently accumulated via AsyncStorage.
+- **Evolving Level Badges**: Levels range from 1 to 6 (Novice ➡️ Apprentice ➡️ Warrior ➡️ Veteran ➡️ Master ➡️ Grandmaster).
+- **Interactive Level Up Modals**: Displays a level up modal celebrating new titles and level progress upon completion of a match.
+- **Home Screen HUD**: Displays active title, level, and a styled progress bar towards the next level directly below the player's username handle. Max levels showcase a crowns badge.
+
 ## GraphQL API Summary
 
 ### Queries

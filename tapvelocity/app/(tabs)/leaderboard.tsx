@@ -1,4 +1,4 @@
-import { AppState, FlatList, StyleSheet, View } from 'react-native';
+import { AppState, FlatList, StyleSheet, View, Image } from 'react-native';
 import { gql, useQuery, useSubscription } from '@apollo/client';
 import { useIsFocused } from '@react-navigation/native';
 import { useEffect } from 'react';
@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { useUserStore } from '@/stores/user-store';
+import { useUserStore, RANK_BADGES } from '@/stores/user-store';
 
 const LEADERBOARD_QUERY = gql`
   query Leaderboard($limit: Int) {
@@ -17,6 +17,7 @@ const LEADERBOARD_QUERY = gql`
       user {
         id
         username
+        title
       }
     }
   }
@@ -32,7 +33,7 @@ interface LeaderboardEntry {
   rank: number;
   tapCount: number;
   percentile: number;
-  user: { id: string; username: string };
+  user: { id: string; username: string; title: string };
 }
 
 export default function LeaderboardScreen() {
@@ -91,10 +92,16 @@ export default function LeaderboardScreen() {
       >
       <ThemedText style={[styles.rank, { color: tint }]}>#{item.rank}</ThemedText>
       <View style={styles.info}>
+        <View style={styles.usernameRow}>
           <ThemedText style={styles.username}>
             {item.user.username}
             {isCurrentUser ? ' (You)' : ''}
           </ThemedText>
+          <Image
+            source={RANK_BADGES[item.user.title || 'Novice']}
+            style={styles.rankBadgeImage}
+          />
+        </View>
         <ThemedText style={[styles.detail, { color: mutedText }]}>
           {item.tapCount} taps · Top {(100 - item.percentile).toFixed(1)}%
         </ThemedText>
@@ -174,6 +181,16 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rankBadgeImage: {
+    width: 44,
+    height: 44,
+    resizeMode: 'contain',
   },
   detail: {
     fontSize: 13,

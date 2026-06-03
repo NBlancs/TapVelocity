@@ -91,6 +91,25 @@ export const resolvers = {
       // If no prior games, this is the first — 100th percentile
       const percentile = total === 0 ? 100 : Math.round((beaten / (total + 1)) * 10000) / 100;
 
+      // Calculate total taps for the user to determine title upgrade
+      const userGames = await prisma.game.findMany({
+        where: { userId },
+        select: { tapCount: true },
+      });
+      const cumulativeTaps = userGames.reduce((sum, g) => sum + g.tapCount, 0) + tapCount;
+
+      let newTitle = "Novice";
+      if (cumulativeTaps >= 2000) newTitle = "Grandmaster";
+      else if (cumulativeTaps >= 1000) newTitle = "Master";
+      else if (cumulativeTaps >= 600) newTitle = "Veteran";
+      else if (cumulativeTaps >= 400) newTitle = "Warrior";
+      else if (cumulativeTaps >= 200) newTitle = "Apprentice";
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { title: newTitle },
+      });
+
       const game = await prisma.game.create({
         data: {
           userId,

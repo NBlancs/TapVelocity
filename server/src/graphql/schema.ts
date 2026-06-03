@@ -2,6 +2,7 @@ export const schema = /* GraphQL */ `
   type User {
     id: ID!
     username: String!
+    title: String!
     createdAt: String!
     games: [Game!]!
   }

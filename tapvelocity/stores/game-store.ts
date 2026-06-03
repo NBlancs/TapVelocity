@@ -18,6 +18,7 @@ interface GameState {
   recordTap: (player?: 1 | 2) => void;
   tick: () => void;
   resetGame: () => void;
+  finishGame: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -83,5 +84,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       playerTwoTaps: 0,
       timeRemaining: 10,
       startTime: null,
+    }),
+
+  finishGame: () =>
+    set({
+      status: 'finished',
+      timeRemaining: 0,
     }),
 }));

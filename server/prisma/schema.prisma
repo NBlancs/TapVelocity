@@ -10,6 +10,7 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
+  title     String   @default("Novice")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   games     Game[]
