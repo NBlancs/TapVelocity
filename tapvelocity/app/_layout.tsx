@@ -30,7 +30,13 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
-            options={{ presentation: 'modal', title: 'Welcome', gestureEnabled: false }}
+            options={{
+              presentation: 'modal',
+              title: 'Welcome',
+              gestureEnabled: false,
+              headerBackVisible: false,
+              headerLeft: () => null,
+            }}
           />
         </Stack>
         <StatusBar style="auto" />
